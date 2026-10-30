@@ -1,0 +1,155 @@
+// Поиск выполняется на устройстве; словарь меняет только подбор карточек.
+const data = JSON.parse(document.getElementById('data').textContent);
+const vocabulary = JSON.parse(document.getElementById('vocabulary').textContent);
+const q = document.getElementById('q'), cat = document.getElementById('cat'), results = document.getElementById('results');
+const stop = new Set(vocabulary.stop_words.split(' ').map(norm));
+let visibleCount = 6;
+const stems = new Map(), concepts = new Map(), comparisons = new Map();
+function norm(s) { return String(s ?? '').toLocaleLowerCase('ru').replaceAll('ё', 'е').replace(/[^a-zа-я0-9]+/g, ' ').trim(); }
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function stem(word) {
+  if (!/^[а-я]{5,}$/.test(word)) return word;
+  if (!stems.has(word)) stems.set(word, word.replace(/(иями|ями|ами|ого|ему|ому|ыми|ими|ией|иям|иях|ах|ях|ов|ев|ей|ом|ем|ую|юю|ая|яя|ое|ее|ые|ия|ию|ии|ие|ый|ий|ой|а|я|ы|и|у|ю|е|о)$/, ''));
+  return stems.get(word);
+}
+function concept(word) {
+  if (concepts.has(word)) return concepts.get(word);
+  const n = norm(word);
+  const i = vocabulary.groups.findIndex(group => group.some(s => s.length >= 5 ? n.startsWith(s) : n === s));
+  concepts.set(word, i < 0 ? null : i);
+  return concepts.get(word);
+}
+function termsOf(text) {
+  let s = norm(text);
+  for (const [from, to] of vocabulary.phrases) s = (' ' + s + ' ').replaceAll(' ' + from + ' ', ' ' + to + ' ').trim();
+  return [...new Set(s.split(' ').filter(w => w && !stop.has(w)))];
+}
+function typo(a, b) {
+  if (!/^[а-я]{5,}$/.test(a) || !/^[а-я]{5,}$/.test(b) || Math.abs(a.length - b.length) > 1) return false;
+  let i = 0; while (i < Math.min(a.length, b.length) && a[i] === b[i]) i++;
+  if (a.length === b.length) return a.slice(i + 1) === b.slice(i + 1) || (a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2));
+  return a.length > b.length ? a.slice(i + 1) === b.slice(i) : a.slice(i) === b.slice(i + 1);
+}
+function wordMatch(a, b, fuzzy) {
+  const key = a + '|' + b + '|' + fuzzy;
+  if (!comparisons.has(key)) comparisons.set(key, compareWords(a, b, fuzzy));
+  return comparisons.get(key);
+}
+function compareWords(a, b, fuzzy) {
+  if (a === b) return 1;
+  if (/[0-9]/.test(a)) return /[a-zа-я]/.test(a) && b.startsWith(a) ? 0.9 : 0;
+  if (/^[a-z]+$/.test(a)) return a.length >= 3 && b.startsWith(a) ? 0.85 : 0;
+  if (a.length >= 3 && b.startsWith(a)) return 0.9;
+  if (a.length >= 4 && stem(a) === stem(b)) return 0.88;
+  if (concept(a) !== null && concept(a) === concept(b)) return 0.72;
+  return fuzzy && typo(a, b) ? 0.55 : 0;
+}
+const index = data.errors.map(r => {
+  const fields = [r.title, r.original_error_text || '', ...r.alternative_search_phrases, r.workflow, r.category, r.keywords.join(' ')];
+  return {r, fields: fields.map(text => ({text: norm(text), words: termsOf(text)})), codes: [r.id, r.error_code, r.defect_id].filter(Boolean).map(norm)};
+});
+function layoutCorrection(query) {
+  if (!/^[a-z\s.,;']{4,}$/i.test(query)) return '';
+  const from = "qwertyuiop[]asdfghjkl;'zxcvbnm,.", to = 'йцукенгшщзхъфывапролджэячсмитьбю';
+  return query.toLowerCase().split('').map(c => from.includes(c) ? to[from.indexOf(c)] : c).join('');
+}
+function rank(query, category, fuzzy) {
+  const terms = termsOf(query), n = norm(query);
+  if (!terms.length) return [];
+  const protectedCodes = query.match(/\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b|\b\d{2}-\d{6,}\b/gi) || [];
+  return index.filter(x => !category || category === x.r.category).flatMap(x => {
+    if (protectedCodes.some(code => !x.fields.some(f => (' ' + f.text + ' ').includes(' ' + norm(code) + ' ')) && !x.codes.includes(norm(code)))) return [];
+    const exact = x.codes.includes(n);
+    const values = terms.map(t => Math.max(0, ...x.fields.flatMap(f => f.words.map(w => wordMatch(t, w, fuzzy))), x.codes.includes(t) ? 1 : 0));
+    if (!exact && values.some(v => v === 0)) return [];
+    // Не склеиваем разрозненные слова в ложную ситуацию: например, отсутствие
+    // врача и запись пациента не означают, что пропал сам пациент.
+    const together = Math.max(0, ...x.fields.map(f => terms.filter(t => f.words.some(w => wordMatch(t, w, fuzzy) > 0)).length));
+    if (!exact && terms.length > 1 && together < Math.ceil(terms.length * 0.66)) return [];
+    const phrase = Math.max(0, ...x.fields.map((f, i) => f.text.includes(n) && n.length >= 3 ? (i === 0 ? 45 : i === 1 ? 38 : 32) : 0));
+    const inTitle = terms.reduce((v, t) => v + Math.max(0, ...x.fields[0].words.map(w => wordMatch(t, w, fuzzy))) * 8, 0);
+    // Для общего запроса о подписи сначала показываем состояние документа.
+    // Это порядок чтения, а не утверждение о причине конкретного сбоя.
+    const generalSignature = terms.length === 1 && concept(terms[0]) === 0;
+    const workflowPriority = generalSignature && /^документ|^после подписания/i.test(x.r.title) ? 20 : 0;
+    const rawTerms = n.split(' ');
+    const nearPhrase = fuzzy && rawTerms.length > 1 && x.fields.some(f => {
+      const words = f.text.split(' ');
+      return words.length === rawTerms.length && rawTerms.every((t, i) => wordMatch(t, words[i], true) > 0);
+    }) ? 24 : 0;
+    const score = (exact ? 1000 : 0) + Math.max(phrase, nearPhrase) + inTitle + workflowPriority + values.reduce((a, b) => a + b, 0) * 12;
+    const reason = exact ? 'Совпадает номер или код' : phrase ? 'Совпадает текст запроса' : values.some(v => v === 0.55) ? 'Похожее написание' : 'Совпадает действие или описание';
+    return [{r: x.r, score, reason, fuzzy: values.some(v => v === 0.55)}];
+  }).sort((a, b) => b.score - a.score || a.r.id.localeCompare(b.r.id));
+}
+function findMatches(query, category = '') {
+  if (comparisons.size > 40000) comparisons.clear();
+  if (!query.trim()) return {matches: data.errors.filter(r => !category || r.category === category), hits: [], approximate: false};
+  let hits = rank(query, category, false), corrected = '';
+  if (!hits.length) hits = rank(query, category, true);
+  if (!hits.length && layoutCorrection(query)) {
+    const changed = layoutCorrection(query);
+    let alternative = rank(changed, category, false);
+    if (!alternative.length) alternative = rank(changed, category, true);
+    if (alternative.length) { hits = alternative; corrected = changed; }
+  }
+  return {matches: hits.map(h => h.r), hits, approximate: hits.some(h => h.fuzzy), corrected, needsContext: !termsOf(query).length};
+}
+function badge(r) {
+  const status = r.evidence_status.filter(s => s !== 'Требует локальной проверки').join(' · ');
+  return `<span class="badge${r.evidence_status.includes('Не решено') ? ' uncertain' : ''}">${esc(status)}</span>`;
+}
+function shortProduct(r) { return r.software_product.includes('1C-MR') ? 'Линия 1C-MR' : r.software_product.replace('1С:Медицина. ', '1С: '); }
+function card(r, reason = '', open = false) {
+  return `<article id="error-${r.id}"><details class="problem"${open ? ' open' : ''}><summary><span class="card-top"><span class="number">№ ${r.id}</span>${badge(r)}</span><h2>${esc(r.title)}</h2>${r.error_code ? `<span class="code">${esc(r.error_code)}</span>` : ''}<span class="context">${esc(r.workflow)}</span><span class="card-meta">${esc(shortProduct(r))} · ${esc(r.software_version)}</span><span class="open-label">Посмотреть действия <span aria-hidden="true">↓</span></span></summary>
+    <div class="answer"><p class="applicability">Сначала сверьте ситуацию и версию. В вашей больнице эта карточка ещё не проверена.</p><p><b>Почему:</b> ${esc(r.cause)}</p><h3>Что делать</h3><ol>${r.physician_instructions.map(s => `<li>${esc(s)}</li>`).join('')}</ol><div class="escalation"><h3>Если не помогло</h3><p>${esc(r.escalation_instructions)}</p></div>
+    <details class="sources"><summary>Текст ошибки, версия и источники</summary><p>${r.error_code ? 'Код: <b>' + esc(r.error_code) + '</b>. ' : ''}${esc(r.original_error_text || 'Точный текст ошибки не установлен.')}</p><p class="meta">Что искать: ${esc(r.alternative_search_phrases.join('; '))}</p><p>${esc(r.software_product)} · ${esc(r.software_version)}</p><p>${r.source_urls.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noreferrer noopener">Источник ${i + 1}</a>`).join(' · ')}</p><p class="meta">${esc(r.source_locator)} ${esc(r.evidence_note)}</p><p class="meta">Дата источника: ${esc(r.source_date)}. Проверено: ${esc(r.checked_on)}.</p></details><a class="back" href="#q">Вернуться к поиску</a></div></details>${reason ? `<p class="match-reason">${esc(reason)}</p>` : ''}</article>`;
+}
+const tasks = [ ['Пациенты и госпитализация','Пациент и госпитализация'], ['Дневники и записи врача','Запись и дневник'], ['Назначения','Лекарства и назначения'], ['Эпикризы и выписка','Эпикриз и выписка'], ['Подписание документов','Электронная подпись'], ['Отправка электронных документов','Отправка в РЭМД'], ['Диагностика и исследования','Исследования'], ['Печать и формирование документов','Печать документов'] ];
+function taskButtons() { return `<div class="task-grid">${tasks.map(([value, label]) => `<button type="button" data-category="${esc(value)}">${label}<span aria-hidden="true"> →</span></button>`).join('')}</div>`; }
+for (const c of [...new Set(data.errors.map(r => r.category))]) { const o = document.createElement('option'); o.textContent = c; o.value = c; cat.append(o); }
+function render(keepOpen = []) {
+  const count = document.getElementById('count');
+  document.getElementById('clear').hidden = !q.value && !cat.value;
+  document.getElementById('filter-state').textContent = cat.value ? 'Выбран раздел: ' + cat.value : 'Все разделы';
+  if (!q.value.trim() && !cat.value) {
+    count.textContent = '';
+    results.innerHTML = `<section class="home"><h2>Или выберите задачу</h2>${taskButtons()}<p class="meta">${data.errors.length} ситуаций с источниками. Можно искать по коду, части сообщения или своими словами.</p></section>`;
+    return;
+  }
+  const found = findMatches(q.value, cat.value), {matches, approximate, corrected} = found;
+  const hidden = cat.value ? `<button class="text-button" type="button" data-action="all-categories">Искать во всех разделах</button>` : '';
+  count.textContent = `${matches.length ? 'Найдено ситуаций: ' + matches.length : 'Совпадений нет'}${cat.value ? ' · ' + cat.value : ''}`;
+  if (!matches.length) {
+    const other = cat.value && findMatches(q.value, '').matches.length;
+    results.innerHTML = `<section class="empty"><h2>${found.needsContext ? 'Уточните, что вы делали' : 'Подтверждённый ответ не найден'}</h2><p>${other ? 'Есть совпадения в других разделах. Снимите фильтр, сохранив запрос.' : found.needsContext ? 'Например: искали пациента, подписывали эпикриз или печатали назначения.' : 'Попробуйте название действия и два-три слова из сообщения. Неизвестный код нельзя надёжно объяснить по похожему номеру.'}</p>${hidden}${taskButtons()}<details><summary>Что передать поддержке</summary><p>Название системы и версию, время сбоя, выполняемое действие и текст сообщения без данных пациента. Не повторяйте назначение, выписку или отправку, пока не проверено состояние исходной записи.</p></details></section>`;
+    return;
+  }
+  let note = approximate ? '<p class="search-note"><b>Точных совпадений нет.</b> Найдены похожие слова с возможной опечаткой. Коды не исправлялись. Сверьте описание ситуации.</p>' : '';
+  if (corrected) note += `<p class="search-note">Возможно, была включена английская раскладка. Показаны результаты для «${esc(corrected)}». <button type="button" class="text-button" data-query="${esc(corrected)}">Использовать эту формулировку</button></p>`;
+  if (matches.length > 1) note += '<p class="guidance">Выберите ситуацию по описанию. Похожий запрос ещё не подтверждает причину.</p>';
+  const categories = [...new Set(matches.map(r => r.category))];
+  const facets = !cat.value && categories.length > 1 ? `<div class="refine" aria-label="Уточнить задачу">${categories.map(c => `<button type="button" data-refine="${esc(c)}">${esc(c)} <span>${matches.filter(r => r.category === c).length}</span></button>`).join('')}</div>` : hidden;
+  const shown = matches.slice(0, visibleCount);
+  results.innerHTML = note + facets + shown.map(r => card(r, found.hits.find(h => h.r.id === r.id)?.reason, matches.length === 1 || keepOpen.includes('error-' + r.id))).join('') + (matches.length > visibleCount ? `<button type="button" class="more" data-action="more">Показать ещё ${Math.min(6, matches.length - visibleCount)} из ${matches.length - visibleCount}</button>` : '');
+}
+function update() { visibleCount = 6; render(); }
+function chooseQuery(value) { q.value = value; cat.value = ''; update(); }
+function showResults() {
+  q.blur(); const count = document.getElementById('count'); count.focus(); count.scrollIntoView({block: 'start'});
+}
+document.addEventListener('click', event => {
+  const button = event.target.closest('button'); if (!button) return;
+  if (button.dataset.query !== undefined) chooseQuery(button.dataset.query);
+  if (button.dataset.category) { q.value = ''; cat.value = button.dataset.category; update(); }
+  if (button.dataset.refine) { cat.value = button.dataset.refine; update(); }
+  if (button.dataset.action === 'all-categories') { cat.value = ''; update(); }
+  if (button.dataset.action === 'more') {
+    const open = [...document.querySelectorAll('article > details.problem[open]')].map(d => d.parentElement.id);
+    visibleCount += 6; render(open);
+  } else if (button.dataset.query !== undefined || button.dataset.category || button.dataset.refine || button.dataset.action === 'all-categories') showResults();
+});
+q.addEventListener('input', update); cat.addEventListener('change', update);
+document.getElementById('clear').onclick = () => { q.value = ''; cat.value = ''; update(); q.focus(); };
+document.getElementById('search-form').addEventListener('submit', event => { event.preventDefault(); update(); showResults(); });
+render();

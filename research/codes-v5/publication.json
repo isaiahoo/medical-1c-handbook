@@ -1,0 +1,26 @@
+{
+  "version": 5,
+  "checked_on": "2026-10-30",
+  "parent": "786aa8dabd87a173076207565fcf1ebbd9978272",
+  "commit": "72eb8d97872c768da9639987dbb99a25ef08ebe9",
+  "tree": "25bb3266958f60077fd6b1c144295279c95248f8",
+  "files": [
+    {
+      "path": "index.html",
+      "bytes": 705011,
+      "git_blob_sha": "10cd1fa57b6a03c3395e434aa114461caa8718e2"
+    },
+    {
+      "path": "doctor_guide_mobile.html",
+      "bytes": 704971,
+      "git_blob_sha": "44c126373c16ee8bcff951bbee2c31cca3719e6a"
+    },
+    {
+      "path": "doctor_guide.pdf",
+      "bytes": 1462754,
+      "git_blob_sha": "3584836a3e2525d4ef592f16d2bc7c2975f6457f"
+    }
+  ],
+  "publication_status": "Timeweb: Успешно; обычный адрес открыл версию 5; поиск ORA-20015 проверен в Safari",
+  "pdf_publication_status": "PDF с обычного адреса открыт в Safari: 176 страниц, 174 карточки"
+}

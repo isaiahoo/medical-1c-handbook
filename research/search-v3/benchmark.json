@@ -1,0 +1,661 @@
+{
+  "total": 52,
+  "before": 32,
+  "after": 50,
+  "cases": [
+    {
+      "query": "нет пациента",
+      "expected": [
+        "023"
+      ],
+      "before": [
+        "011",
+        "013",
+        "015"
+      ],
+      "after": [
+        "023",
+        "015",
+        "024"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не сохраняется дневник",
+      "expected": [
+        "041"
+      ],
+      "before": [
+        "041"
+      ],
+      "after": [
+        "041"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не могу подписать эпикриз",
+      "expected": [
+        "022",
+        "042"
+      ],
+      "before": [
+        "022",
+        "042"
+      ],
+      "after": [
+        "042",
+        "022"
+      ],
+      "passed": true
+    },
+    {
+      "query": "04x0001",
+      "expected": [
+        "040"
+      ],
+      "before": [
+        "040"
+      ],
+      "after": [
+        "040"
+      ],
+      "passed": true
+    },
+    {
+      "query": "2992",
+      "expected": [
+        "015"
+      ],
+      "before": [
+        "015"
+      ],
+      "after": [
+        "015"
+      ],
+      "passed": true
+    },
+    {
+      "query": "добавить МД",
+      "expected": [
+        "003",
+        "004",
+        "005"
+      ],
+      "before": [
+        "003",
+        "004",
+        "005"
+      ],
+      "after": [
+        "003",
+        "004",
+        "005"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не найден сертификат",
+      "expected": [
+        "022"
+      ],
+      "before": [
+        "022"
+      ],
+      "after": [
+        "022"
+      ],
+      "passed": true
+    },
+    {
+      "query": "ДатаВыписки",
+      "expected": [
+        "019"
+      ],
+      "before": [
+        "019"
+      ],
+      "after": [
+        "019"
+      ],
+      "passed": true
+    },
+    {
+      "query": "DOC_DATE_MISMATCH_CERT_NOT_AFTER",
+      "expected": [
+        "059"
+      ],
+      "before": [
+        "059"
+      ],
+      "after": [
+        "059"
+      ],
+      "passed": true
+    },
+    {
+      "query": "doc_date_mismatch_cert_not_before",
+      "expected": [
+        "060"
+      ],
+      "before": [
+        "060"
+      ],
+      "after": [
+        "060"
+      ],
+      "passed": true
+    },
+    {
+      "query": "MIS_NOT_AVAILABLE",
+      "expected": [
+        "062"
+      ],
+      "before": [
+        "062"
+      ],
+      "after": [
+        "062"
+      ],
+      "passed": true
+    },
+    {
+      "query": "00-00009439",
+      "expected": [
+        "068"
+      ],
+      "before": [
+        "068"
+      ],
+      "after": [
+        "068"
+      ],
+      "passed": true
+    },
+    {
+      "query": "компоненты инъекции",
+      "expected": [
+        "045"
+      ],
+      "before": [
+        "045"
+      ],
+      "after": [
+        "045"
+      ],
+      "passed": true
+    },
+    {
+      "query": "готов без подписи",
+      "expected": [
+        "050"
+      ],
+      "before": [
+        "050"
+      ],
+      "after": [
+        "050",
+        "043"
+      ],
+      "passed": true
+    },
+    {
+      "query": "период просмотра ЭМК",
+      "expected": [
+        "072"
+      ],
+      "before": [
+        "072"
+      ],
+      "after": [
+        "072"
+      ],
+      "passed": true
+    },
+    {
+      "query": "уже зарегистрирован",
+      "expected": [
+        "056"
+      ],
+      "before": [
+        "056",
+        "086"
+      ],
+      "after": [
+        "056",
+        "086"
+      ],
+      "passed": true
+    },
+    {
+      "query": "пациент пропал",
+      "expected": [
+        "023"
+      ],
+      "before": [
+        "023"
+      ],
+      "after": [
+        "023",
+        "051"
+      ],
+      "passed": true
+    },
+    {
+      "query": "пациента не вижу в отделении",
+      "expected": [
+        "023"
+      ],
+      "before": [],
+      "after": [
+        "023",
+        "006"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не нахожу больного",
+      "expected": [
+        "023",
+        "051"
+      ],
+      "before": [],
+      "after": [
+        "023",
+        "051"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не даёт выписать",
+      "expected": [
+        "025",
+        "053",
+        "007"
+      ],
+      "before": [],
+      "after": [
+        "025",
+        "007",
+        "008"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не могу выписать из дневного стационара",
+      "expected": [
+        "025"
+      ],
+      "before": [],
+      "after": [
+        "025"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не могу изменить старый документ",
+      "expected": [
+        "071"
+      ],
+      "before": [],
+      "after": [
+        "071"
+      ],
+      "passed": true
+    },
+    {
+      "query": "запись в медицинской карте пропала",
+      "expected": [
+        "072"
+      ],
+      "before": [],
+      "after": [
+        "072"
+      ],
+      "passed": true
+    },
+    {
+      "query": "лекарства отсутствуют в подборе",
+      "expected": [
+        "046"
+      ],
+      "before": [],
+      "after": [
+        "046"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не могу распечатать назначения",
+      "expected": [
+        "047",
+        "048"
+      ],
+      "before": [],
+      "after": [
+        "047",
+        "048"
+      ],
+      "passed": true
+    },
+    {
+      "query": "просроченный сертификат",
+      "expected": [
+        "059"
+      ],
+      "before": [],
+      "after": [
+        "059",
+        "050"
+      ],
+      "passed": true
+    },
+    {
+      "query": "подпись не работает",
+      "expected": [
+        "050",
+        "042",
+        "059"
+      ],
+      "before": [],
+      "after": [
+        "042",
+        "050",
+        "012"
+      ],
+      "passed": true
+    },
+    {
+      "query": "помогите пожалуйста не сохраняется дневник",
+      "expected": [
+        "041"
+      ],
+      "before": [],
+      "after": [
+        "041"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не сохраянется дневник",
+      "expected": [
+        "041"
+      ],
+      "before": [
+        "041"
+      ],
+      "after": [
+        "041"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не сохраняется дненик",
+      "expected": [
+        "041"
+      ],
+      "before": [
+        "041"
+      ],
+      "after": [
+        "041"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не найден сертифкат",
+      "expected": [
+        "022"
+      ],
+      "before": [
+        "022"
+      ],
+      "after": [
+        "022"
+      ],
+      "passed": true
+    },
+    {
+      "query": "сертификатт истек",
+      "expected": [
+        "059"
+      ],
+      "before": [
+        "059"
+      ],
+      "after": [
+        "059",
+        "050"
+      ],
+      "passed": true
+    },
+    {
+      "query": "ytn gfwbytnf",
+      "expected": [
+        "023"
+      ],
+      "before": [],
+      "after": [
+        "023",
+        "024",
+        "025"
+      ],
+      "passed": true
+    },
+    {
+      "query": "подпис",
+      "expected": [
+        "042",
+        "050"
+      ],
+      "before": [
+        "011",
+        "012",
+        "022"
+      ],
+      "after": [
+        "042",
+        "050",
+        "011"
+      ],
+      "passed": true
+    },
+    {
+      "query": "серая кнопка добавить МД",
+      "expected": [
+        "003",
+        "004",
+        "005"
+      ],
+      "before": [],
+      "after": [
+        "003"
+      ],
+      "passed": true
+    },
+    {
+      "query": "пациент после перевода",
+      "expected": [
+        "024",
+        "052"
+      ],
+      "before": [
+        "024",
+        "052"
+      ],
+      "after": [
+        "024",
+        "052"
+      ],
+      "passed": true
+    },
+    {
+      "query": "диагноз для выписки",
+      "expected": [
+        "053",
+        "008"
+      ],
+      "before": [],
+      "after": [
+        "053",
+        "008"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не могу отправить без полиса",
+      "expected": [
+        "013"
+      ],
+      "before": [],
+      "after": [
+        "013"
+      ],
+      "passed": true
+    },
+    {
+      "query": "исчезло направление после госпитализации",
+      "expected": [
+        "037"
+      ],
+      "before": [
+        "037"
+      ],
+      "after": [
+        "037"
+      ],
+      "passed": true
+    },
+    {
+      "query": "больничные не приходят",
+      "expected": [
+        "031"
+      ],
+      "before": [],
+      "after": [
+        "031"
+      ],
+      "passed": true
+    },
+    {
+      "query": "получение снилс не работает",
+      "expected": [
+        "032"
+      ],
+      "before": [
+        "032"
+      ],
+      "after": [
+        "032",
+        "069"
+      ],
+      "passed": true
+    },
+    {
+      "query": "врач в отпуске",
+      "expected": [
+        "054"
+      ],
+      "before": [
+        "054"
+      ],
+      "after": [
+        "054"
+      ],
+      "passed": true
+    },
+    {
+      "query": "таблица осмотра пропала",
+      "expected": [
+        "034"
+      ],
+      "before": [
+        "034"
+      ],
+      "after": [
+        "034"
+      ],
+      "passed": true
+    },
+    {
+      "query": "не открывается ЭМК",
+      "expected": [
+        "016"
+      ],
+      "before": [],
+      "after": [
+        "016"
+      ],
+      "passed": true
+    },
+    {
+      "query": "041",
+      "expected": [
+        "041"
+      ],
+      "before": [
+        "041"
+      ],
+      "after": [
+        "041"
+      ],
+      "passed": true
+    },
+    {
+      "query": "ошибка 500",
+      "expected": [],
+      "before": [],
+      "after": [
+        "089",
+        "090"
+      ],
+      "passed": false
+    },
+    {
+      "query": "ошибка 501",
+      "expected": [],
+      "before": [],
+      "after": [
+        "152"
+      ],
+      "passed": false
+    },
+    {
+      "query": "04x0002",
+      "expected": [],
+      "before": [],
+      "after": [],
+      "passed": true
+    },
+    {
+      "query": "DOC_DATE_MISMATCH_CERT_NOT_AFTEQ",
+      "expected": [],
+      "before": [],
+      "after": [],
+      "passed": true
+    },
+    {
+      "query": "00-00009438",
+      "expected": [],
+      "before": [],
+      "after": [],
+      "passed": true
+    },
+    {
+      "query": "несуществующая ошибка квантового принтера",
+      "expected": [],
+      "before": [],
+      "after": [],
+      "passed": true
+    },
+    {
+      "query": "не работает",
+      "expected": [],
+      "before": [
+        "032"
+      ],
+      "after": [],
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+
+# Secrets
+.env
+.env.*
+!.env.example
+.secrets/
+*.pem
+*.key
+
+# Dependencies and build files
+node_modules/
+.next/
+dist/
+.venv/
+__pycache__/
+.DS_Store
+
+# Локальные проверки вёрстки и служебные материалы
+/research/pdf_review/*.png
+/research/pdf_review/guide_layout.pdf
+/research/pdf_review/extracted.txt
+/research/codes-v4/pdf-contact-*.png
+/research/codes-v5/pdf-contact-*.png
+/sites/
+/ .html
+
+# Видеозаписи: публикуется только готовый демонстрационный файл
+*.screenstudio/
